@@ -132,18 +132,27 @@ local Library = {
 }
 
 do 
-	local GUI = game:GetService("CoreGui"):FindFirstChild("CtrlOverlay")
-	if GUI then 
-		GUI:Destroy()
-	end
-
-	local GUI1 = game:GetService("CoreGui"):FindFirstChild("ScreenContainer_fpdsid")
-	if GUI1 then 
-		GUI1:Destroy()
+	-- Clean up ALL old overlay instances (CoreGui + PlayerGui)
+	for _, parent in ipairs({game:GetService("CoreGui"), LocalPlayer:FindFirstChild("PlayerGui") or {}}) do
+		if parent and parent.FindFirstChild then
+			for _, name in ipairs({"CtrlOverlay", "ScreenContainer_fpdsid"}) do
+				local old = parent:FindFirstChild(name)
+				if old then
+					pcall(function() old:Destroy() end)
+				end
+			end
+		end
 	end
 end
 
+local _closeButtonInstance = nil
+
 local function CloseOpen()
+	-- Idempotent: return existing button if already created
+	if _closeButtonInstance and _closeButtonInstance.Parent then
+		return _closeButtonInstance
+	end
+
 	local UIStroke = Instance.new("UIStroke")
 	local UICorner = Instance.new("UICorner")
 
@@ -199,6 +208,7 @@ local function CloseOpen()
 		end
 	end)
 
+	_closeButtonInstance = Close_ImageButton
 	return Close_ImageButton
 end
 
@@ -749,8 +759,8 @@ end
 function Creator.Disconnect()
 	for Idx = #Creator.Signals, 1, -1 do
 		local Connection = table.remove(Creator.Signals, Idx)
-		if Connection.Disconnect then
-			Connection:Disconnect()
+		if Connection and Connection.Disconnect then
+			pcall(function() Connection:Disconnect() end)
 		end
 	end
 end
@@ -2723,6 +2733,239 @@ Components.Window = (function()
 		end)
 
 		return Window
+	end
+end)()
+Components.MiniWindow = (function()
+	local Spring = Flipper.Spring.new
+	local Instant = Flipper.Instant.new
+	local New = Creator.New
+
+	return function(Config)
+		local MiniWindow = {
+			Open = true,
+		}
+
+		local Dragging = false
+		local DragInput, MousePos, StartPos
+
+		local AcrylicPaint = Acrylic.AcrylicPaint()
+
+		MiniWindow.Root = New("Frame", {
+			BackgroundTransparency = 1,
+			Size = Config.Size or UDim2.fromOffset(380, 300),
+			Position = Config.Position or UDim2.fromOffset(
+				Camera.ViewportSize.X / 2 - (Config.Size or UDim2.fromOffset(380, 300)).X.Offset / 2 + 200,
+				Camera.ViewportSize.Y / 2 - (Config.Size or UDim2.fromOffset(380, 300)).Y.Offset / 2
+			),
+			Parent = Config.Parent,
+			ZIndex = 10,
+		}, {
+			AcrylicPaint.Frame,
+		})
+
+		-- Title bar
+		local TitleBarFrame = New("Frame", {
+			Size = UDim2.new(1, 0, 0, 38),
+			BackgroundTransparency = 1,
+			Parent = MiniWindow.Root,
+		}, {
+			New("Frame", {
+				Size = UDim2.new(1, -12, 1, 0),
+				Position = UDim2.new(0, 12, 0, 0),
+				BackgroundTransparency = 1,
+			}, {
+				New("UIListLayout", {
+					Padding = UDim.new(0, 4),
+					FillDirection = Enum.FillDirection.Horizontal,
+					SortOrder = Enum.SortOrder.LayoutOrder,
+				}),
+				New("TextLabel", {
+					RichText = true,
+					Text = Config.Title or "Mini Window",
+					FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+					TextSize = 12,
+					TextXAlignment = "Left",
+					TextYAlignment = "Center",
+					Size = UDim2.fromScale(0, 1),
+					AutomaticSize = Enum.AutomaticSize.X,
+					BackgroundTransparency = 1,
+					ThemeTag = { TextColor3 = "Text" },
+				}),
+				New("TextLabel", {
+					RichText = true,
+					Text = Config.SubTitle or "",
+					TextTransparency = 0.4,
+					FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+					TextSize = 12,
+					TextXAlignment = "Left",
+					TextYAlignment = "Center",
+					Size = UDim2.fromScale(0, 1),
+					AutomaticSize = Enum.AutomaticSize.X,
+					BackgroundTransparency = 1,
+					ThemeTag = { TextColor3 = "Text" },
+				}),
+			}),
+			New("Frame", {
+				BackgroundTransparency = 0.5,
+				Size = UDim2.new(1, 0, 0, 1),
+				Position = UDim2.new(0, 0, 1, 0),
+				ThemeTag = { BackgroundColor3 = "TitleBarLine" },
+			}),
+		})
+
+		-- Close button
+		local CloseBtn = New("TextButton", {
+			Size = UDim2.new(0, 28, 0, 28),
+			Position = UDim2.new(1, -32, 0, 5),
+			AnchorPoint = Vector2.new(0, 0),
+			BackgroundTransparency = 1,
+			Parent = MiniWindow.Root,
+			Text = "",
+			ZIndex = 11,
+		}, {
+			New("ImageLabel", {
+				Image = Components.Assets.Close,
+				Size = UDim2.fromOffset(14, 14),
+				Position = UDim2.fromScale(0.5, 0.5),
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				BackgroundTransparency = 1,
+				ThemeTag = { ImageColor3 = "Text" },
+			}),
+		})
+
+		-- Content scrolling area
+		local ContentLayout = New("UIListLayout", {
+			Padding = UDim.new(0, 5),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		})
+
+		MiniWindow.ContainerHolder = New("ScrollingFrame", {
+			Size = UDim2.new(1, -14, 1, -50),
+			Position = UDim2.new(0, 7, 0, 44),
+			BackgroundTransparency = 1,
+			Parent = MiniWindow.Root,
+			BottomImage = "rbxassetid://6889812791",
+			MidImage = "rbxassetid://6889812721",
+			TopImage = "rbxassetid://6276641225",
+			ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255),
+			ScrollBarImageTransparency = 0.95,
+			ScrollBarThickness = 3,
+			BorderSizePixel = 0,
+			CanvasSize = UDim2.fromScale(0, 0),
+			ScrollingDirection = Enum.ScrollingDirection.Y,
+		}, {
+			ContentLayout,
+			New("UIPadding", {
+				PaddingRight = UDim.new(0, 5),
+				PaddingLeft = UDim.new(0, 1),
+				PaddingTop = UDim.new(0, 1),
+				PaddingBottom = UDim.new(0, 1),
+			}),
+		})
+
+		-- Auto-resize canvas
+		Creator.AddSignal(ContentLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
+			MiniWindow.ContainerHolder.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 2)
+		end)
+
+		-- Dragging
+		Creator.AddSignal(TitleBarFrame.InputBegan, function(Input)
+			if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+				Dragging = true
+				MousePos = Input.Position
+				StartPos = MiniWindow.Root.Position
+				Input.Changed:Connect(function()
+					if Input.UserInputState == Enum.UserInputState.End then
+						Dragging = false
+					end
+				end)
+			end
+		end)
+
+		Creator.AddSignal(TitleBarFrame.InputChanged, function(Input)
+			if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
+				DragInput = Input
+			end
+		end)
+
+		Creator.AddSignal(UserInputService.InputChanged, function(Input)
+			if Input == DragInput and Dragging then
+				local Delta = Input.Position - MousePos
+				MiniWindow.Root.Position = UDim2.fromOffset(StartPos.X.Offset + Delta.X, StartPos.Y.Offset + Delta.Y)
+			end
+		end)
+
+		-- Close functionality
+		Creator.AddSignal(CloseBtn.MouseButton1Click, function()
+			MiniWindow:Destroy()
+		end)
+
+		if Library.UseAcrylic then
+			AcrylicPaint.AddParent(MiniWindow.Root)
+		end
+
+		-- Sections support
+		local MiniWindowElements = {}
+		setmetatable(MiniWindowElements, Library.Elements)
+
+		function MiniWindow:AddSection(SectionTitle)
+			local Section = { Type = "Section" }
+
+			Section.Root = New("Frame", {
+				BackgroundTransparency = 1,
+				Size = UDim2.new(1, 0, 0, 26),
+				LayoutOrder = 7,
+				Parent = MiniWindow.ContainerHolder,
+			}, {
+				New("TextLabel", {
+					RichText = true,
+					Text = SectionTitle,
+					TextTransparency = 0,
+					FontFace = Font.new("rbxassetid://94193921667843", Enum.FontWeight.SemiBold, Enum.FontStyle.Normal),
+					TextSize = 16,
+					TextXAlignment = "Left",
+					TextYAlignment = "Center",
+					Size = UDim2.new(1, -12, 0, 18),
+					Position = UDim2.fromOffset(0, 2),
+					ThemeTag = { TextColor3 = "Text" },
+				}),
+			})
+
+			local SectionLayout = New("UIListLayout", {
+				Padding = UDim.new(0, 5),
+			})
+
+			Section.Container = New("Frame", {
+				Size = UDim2.new(1, 0, 0, 0),
+				Position = UDim2.fromOffset(0, 24),
+				BackgroundTransparency = 1,
+			}, {
+				SectionLayout,
+			})
+
+			Section.ScrollFrame = MiniWindow.ContainerHolder
+
+			Creator.AddSignal(SectionLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
+				local h = SectionLayout.AbsoluteContentSize.Y
+				Section.Container.Size = UDim2.new(1, 0, 0, h)
+				Section.Root.Size = UDim2.new(1, 0, 0, h + 25)
+			end)
+
+			setmetatable(Section, MiniWindowElements)
+			return Section
+		end
+
+		function MiniWindow:Destroy()
+			if MiniWindow.Open then
+				MiniWindow.Open = false
+				if Library.UseAcrylic then
+					pcall(function() AcrylicPaint.Model:Destroy() end)
+				end
+				MiniWindow.Root:Destroy()
+			end
+		end
+
+		return MiniWindow
 	end
 end)()
 
@@ -5658,6 +5901,32 @@ function Library:CreateWindow(Config)
 	return Window
 end
 
+function Library:CreateMiniWindow(Config)
+	assert(Config.Title, "MiniWindow - Missing Title")
+
+	if not Library.UseAcrylic and (Config.Acrylic or false) then
+		Library.UseAcrylic = Config.Acrylic
+		Library.Acrylic = Config.Acrylic
+		Acrylic.init()
+	end
+
+	local MiniWindow = Components.MiniWindow({
+		Parent = GUI,
+		Size = Config.Size or UDim2.fromOffset(380, 300),
+		Position = Config.Position,
+		Title = Config.Title,
+		SubTitle = Config.SubTitle,
+	})
+
+	-- Update theme if set
+	if Config.Theme and table.find(Library.Themes, Config.Theme) then
+		Library.Theme = Config.Theme
+		Creator.UpdateTheme()
+	end
+
+	return MiniWindow
+end
+
 function Library:SetTheme(Value)
 	if Library.Window and table.find(Library.Themes, Value) then
 		Library.Theme = Value
@@ -5669,11 +5938,21 @@ function Library:Destroy()
 	if Library.Window then
 		Library.Unloaded = true
 		if Library.UseAcrylic then
-			Library.Window.AcrylicPaint.Model:Destroy()
+			pcall(function() Library.Window.AcrylicPaint.Model:Destroy() end)
 		end
 		Creator.Disconnect()
-		Library.GUI:Destroy()
+		pcall(function() Library.GUI:Destroy() end)
 	end
+	-- Clean up close button overlay
+	if _closeButtonInstance then
+		pcall(function()
+			local parent = _closeButtonInstance.Parent
+			if parent then parent:Destroy() end
+		end)
+		_closeButtonInstance = nil
+	end
+	-- Clean up blur folder
+	pcall(function() BlurFolder:Destroy() end)
 end
 
 function Library:ToggleAcrylic(Value)
