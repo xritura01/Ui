@@ -2939,6 +2939,7 @@ Components.MiniWindow = (function()
 				Size = UDim2.new(1, 0, 0, 0),
 				Position = UDim2.fromOffset(0, 24),
 				BackgroundTransparency = 1,
+				Parent = Section.Root,
 			}, {
 				SectionLayout,
 			})
