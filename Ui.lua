@@ -2904,7 +2904,7 @@ Components.MiniWindow = (function()
 
 		-- Sections support
 		local MiniWindowElements = {}
-		setmetatable(MiniWindowElements, Library.Elements)
+		MiniWindowElements.__index = Library.Elements
 
 		function MiniWindow:AddSection(SectionTitle)
 			local Section = { Type = "Section" }
