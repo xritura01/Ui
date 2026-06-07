@@ -19,8 +19,6 @@ end
 
 
 local RenderStepped = RunService.RenderStepped
-
--- anti-idle removed
 local _pgfn = rawget and (rawget(getfenv and getfenv() or _G, "protectgui")
 	or (rawget(_G, "syn") and rawget(_G, "syn").protect_gui)) or nil
 local ProtectGui = _pgfn or function(f) end
@@ -5416,7 +5414,7 @@ end
 local Elements = {}
 Elements.__index = Elements
 Elements.__namecall = function(Table, Key, ...)
-	return Elements[Key](...)
+	return Elements[Key](Table, ...)
 end
 
 for _, ElementComponent in pairs(ElementsTable) do
