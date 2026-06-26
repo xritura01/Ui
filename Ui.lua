@@ -5524,7 +5524,7 @@ local SaveManager = {} do
 			return false, "no config file is selected"
 		end
 
-		local fullPath = Name
+		local fullPath = self.Folder .. "/" .. Name .. ".json"
 
 		local data = {
 			objects = {}
@@ -5551,7 +5551,7 @@ local SaveManager = {} do
 			return false, "no config file is selected"
 		end
 
-		local file = name
+		local file = self.Folder .. "/" .. name .. ".json"
 		if not isfile(file) then return false, "Create Config Save File" end
 
 		local success, decoded = pcall(Http.JSONDecode, Http, readfile(file))
