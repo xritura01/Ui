@@ -2420,7 +2420,7 @@ Components.Window = (function()
 			Position = UDim2.fromOffset(0, 17),
 			AnchorPoint = Vector2.new(0, 0.5),
 			ThemeTag = {
-				BackgroundColor3 = "Accent",
+				BackgroundColor3 = "AcrylicMain",
 			},
 		}, {
 			New("UICorner", {
