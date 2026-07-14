@@ -1527,7 +1527,7 @@ Components.Tab = (function()
 			}),
 			New("TextLabel", {
 				AnchorPoint = Vector2.new(0, 0.5),
-				Position = Icon and UDim2.new(0, 30, 0.5, 0) or UDim2.new(0, 12, 0.5, 0),
+				Position = Icon and UDim2.new(0, 24, 0.5, 0) or UDim2.new(0, 8, 0.5, 0),
 				Text = Title,
 				RichText = true,
 				TextColor3 = Color3.fromRGB(255, 255, 255),
@@ -1548,8 +1548,8 @@ Components.Tab = (function()
 			}),
 			New("ImageLabel", {
 				AnchorPoint = Vector2.new(0, 0.5),
-				Size = UDim2.fromOffset(16, 16),
-				Position = UDim2.new(0, 8, 0.5, 0),
+				Size = UDim2.fromOffset(14, 14),
+				Position = UDim2.new(0, 6, 0.5, 0),
 				BackgroundTransparency = 1,
 				Image = Icon and Icon or nil,
 				ThemeTag = {
@@ -2467,7 +2467,7 @@ Components.Window = (function()
 			TextXAlignment = "Left",
 			TextYAlignment = "Center",
 			Size = UDim2.new(1, -16, 0, 28),
-			Position = UDim2.fromOffset(Window.TabWidth + 26, 56),
+			Position = UDim2.fromOffset(Window.TabWidth + 16, 56),
 			BackgroundTransparency = 1,
 			ThemeTag = {
 				TextColor3 = "Text",
@@ -2486,7 +2486,7 @@ Components.Window = (function()
 
 		Window.ContainerCanvas = New("Frame", {
 			Size = UDim2.new(1, -Window.TabWidth - 32, 1, -102),
-			Position = UDim2.fromOffset(Window.TabWidth + 26, 90),
+			Position = UDim2.fromOffset(Window.TabWidth + 16, 90),
 			BackgroundTransparency = 1,
 		}, {
 			Window.ContainerAnim,
