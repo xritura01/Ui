@@ -27,7 +27,6 @@ local Themes = {
     Names = {
         "Default_AH",
         "Dark",
-        "White",
     },
     Default_AH = {
         Name = "Default",
@@ -105,46 +104,6 @@ local Themes = {
 		SubText = Color3.fromRGB(180, 180, 180),
 		Hover = Color3.fromRGB(120, 90, 255),
 		HoverChange = 0.1,
-	},
-	White = {
-		Name = "White",
-		Accent = Color3.fromRGB(120, 120, 120),
-		AcrylicMain = Color3.fromRGB(240, 240, 240),
-		AcrylicBorder = Color3.fromRGB(200, 200, 200),
-		AcrylicGradient = ColorSequence.new(
-			Color3.fromRGB(250, 250, 250),
-			Color3.fromRGB(230, 230, 230)
-		),
-		AcrylicNoise = 0.95,
-		TitleBarLine = Color3.fromRGB(180, 180, 180),
-		Tab = Color3.fromRGB(220, 220, 220),
-		Element = Color3.fromRGB(230, 230, 230),
-		ElementBorder = Color3.fromRGB(200, 200, 200),
-		InElementBorder = Color3.fromRGB(180, 180, 180),
-		ElementTransparency = 0.1,
-		ToggleSlider = Color3.fromRGB(180, 180, 180),
-		ToggleToggled = Color3.fromRGB(120, 120, 120),
-		SliderRail = Color3.fromRGB(200, 200, 200),
-		DropdownFrame = Color3.fromRGB(230, 230, 230),
-		DropdownHolder = Color3.fromRGB(215, 215, 215),
-		DropdownBorder = Color3.fromRGB(180, 180, 180),
-		DropdownOption = Color3.fromRGB(210, 210, 210),
-		Keybind = Color3.fromRGB(220, 220, 220),
-		Input = Color3.fromRGB(220, 220, 220),
-		InputFocused = Color3.fromRGB(255, 255, 255),
-		InputIndicator = Color3.fromRGB(150, 150, 150),
-		Dialog = Color3.fromRGB(240, 240, 240),
-		DialogHolder = Color3.fromRGB(220, 220, 220),
-		DialogHolderLine = Color3.fromRGB(180, 180, 180),
-		DialogButton = Color3.fromRGB(230, 230, 230),
-		DialogButtonBorder = Color3.fromRGB(180, 180, 180),
-		DialogBorder = Color3.fromRGB(200, 200, 200),
-		DialogInput = Color3.fromRGB(230, 230, 230),
-		DialogInputLine = Color3.fromRGB(180, 180, 180),
-		Text = Color3.fromRGB(0, 0, 0),
-		SubText = Color3.fromRGB(80, 80, 80),
-		Hover = Color3.fromRGB(200, 200, 200),
-		HoverChange = 0.08,
 	}
 
 }
@@ -1284,7 +1243,6 @@ local Components = {
 		Min = "rbxassetid://9886659276",
 		Max = "rbxassetid://9886659406",
 		Restore = "rbxassetid://9886659001",
-		Search = "rbxassetid://6031094678",
 	},
 }
 
@@ -2305,43 +2263,6 @@ Components.TitleBar = (function()
 			return Button
 		end
 
-		-- Search bar components (hidden by default)
-		TitleBar.SearchBox = New("TextBox", {
-			FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json"),
-			Text = "",
-			PlaceholderText = "Search...",
-			TextColor3 = Color3.fromRGB(200, 200, 200),
-			PlaceholderColor3 = Color3.fromRGB(140, 140, 140),
-			TextSize = 13,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			TextYAlignment = Enum.TextYAlignment.Center,
-			BackgroundTransparency = 0.15,
-			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-			Size = UDim2.new(0, 180, 0, 26),
-			Visible = false,
-			ClearTextOnFocus = false,
-			ThemeTag = {
-				TextColor3 = "Text",
-				PlaceholderColor3 = "SubText",
-				BackgroundColor3 = "Element",
-			},
-		}, {
-			New("UICorner", { CornerRadius = UDim.new(0, 4) }),
-			New("UIStroke", {
-				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-				Transparency = 0.5,
-				ThemeTag = { Color = "InElementBorder" },
-			}),
-			New("ImageLabel", {
-				Image = Components.Assets.Search,
-				Size = UDim2.fromOffset(14, 14),
-				Position = UDim2.new(1, -20, 0.5, 0),
-				AnchorPoint = Vector2.new(0, 0.5),
-				BackgroundTransparency = 1,
-				ThemeTag = { ImageColor3 = "SubText" },
-			}),
-		})
-
 		TitleBar.Frame = New("Frame", {
 			Size = UDim2.new(1, 0, 0, 42),
 			BackgroundTransparency = 1,
@@ -2394,18 +2315,6 @@ Components.TitleBar = (function()
 						TextColor3 = "Text",
 					},
 				}),
-				New("Frame", {
-					Size = UDim2.fromScale(1, 1),
-					BackgroundTransparency = 1,
-				}, {
-					New("UIListLayout", {
-						FillDirection = Enum.FillDirection.Horizontal,
-						HorizontalAlignment = Enum.HorizontalAlignment.Right,
-						VerticalAlignment = Enum.VerticalAlignment.Center,
-						SortOrder = Enum.SortOrder.LayoutOrder,
-					}),
-					TitleBar.SearchBox,
-				}),
 			}),
 			New("Frame", {
 				BackgroundTransparency = 0.5,
@@ -2440,40 +2349,13 @@ Components.TitleBar = (function()
 				},
 			})
 		end)
-		TitleBar.SearchActive = false
+		TitleBar.MaxButton = BarButton(Components.Assets.Max, UDim2.new(1, -40, 0, 4), TitleBar.Frame, function()
+			Config.Window.Maximize(not Config.Window.Maximized)
+		end)
 		TitleBar.MinButton = BarButton(Components.Assets.Min, UDim2.new(1, -80, 0, 4), TitleBar.Frame, function()
 			Library.Window:Minimize()
 			local btn = GetCloseButton()
 			if btn and not btn.Visible then btn.Visible = true end
-		end)
-		-- Search toggle button (placed between Max and Min)
-		TitleBar.SearchButton = BarButton(Components.Assets.Search, UDim2.new(1, -76, 0, 4), TitleBar.Frame, function()
-			TitleBar.SearchActive = not TitleBar.SearchActive
-			TitleBar.SearchBox.Visible = TitleBar.SearchActive
-			if not TitleBar.SearchActive then
-				TitleBar.SearchBox.Text = ""
-				Library:SearchElements("")
-				TitleBar.SearchBox:ReleaseFocus()
-			else
-				TitleBar.SearchBox:CaptureFocus()
-			end
-		end)
-		TitleBar.MaxButton = BarButton(Components.Assets.Max, UDim2.new(1, -40, 0, 4), TitleBar.Frame, function()
-			Config.Window.Maximize(not Config.Window.Maximized)
-		end)
-
-		-- Wire up search input
-		local searchDebounce = nil
-		AddSignal(TitleBar.SearchBox:GetPropertyChangedSignal("Text"), function()
-			if searchDebounce then searchDebounce:Cancel() end
-			searchDebounce = task.delay(0.15, function()
-				Library:SearchElements(TitleBar.SearchBox.Text)
-			end)
-		end)
-		AddSignal(TitleBar.SearchBox.FocusLost, function(enterPressed)
-			if enterPressed and TitleBar.SearchBox.Text ~= "" then
-				Library:SearchElements(TitleBar.SearchBox.Text)
-			end
 		end)
 
 		task.defer(function()
@@ -5985,98 +5867,6 @@ local InterfaceManager = {} do
 			InterfaceManager:SaveSettings()
 		end)
 		Library.MinimizeKeybind = MenuKeybind
-	end
-end
-
-function Library:SearchElements(query)
-	query = query or ""
-	query = query:lower():gsub("%s+", " ")  -- normalize whitespace
-	query = query:match("^(.+)$") or ""  -- trim
-
-	local TabModule = Components.Tab
-	if not TabModule or not TabModule.Tabs then return end
-
-	if query == "" then
-		-- Reset: show all tabs, sections, elements
-		for _, tab in next, TabModule.Tabs do
-			tab.Frame.Visible = true
-			for _, child in next, tab.ContainerFrame:GetChildren() do
-				if child:IsA("Frame") then
-					child.Visible = true
-				end
-			end
-		end
-		return
-	end
-
-	local searchTerms = {}
-	for term in query:gmatch("%S+") do
-		table.insert(searchTerms, term)
-	end
-
-	-- Helper: check if text matches all search terms
-	local function matches(text)
-		if not text or text == "" then return false end
-		local lower = text:lower()
-		for _, term in ipairs(searchTerms) do
-			if not lower:find(term, 1, true) then
-				return false
-			end
-		end
-		return true
-	end
-
-	-- First pass: determine which tabs match (by name)
-	local matchingTabs = {}
-	for idx, tab in next, TabModule.Tabs do
-		local tabMatch = matches(tab.Name)
-		tab.Frame.Visible = tabMatch or true  -- keep visible for now, will refine
-		matchingTabs[idx] = tabMatch
-	end
-
-	-- Second pass: for each tab, filter sections and elements
-	for idx, tab in next, TabModule.Tabs do
-		local container = tab.ContainerFrame
-		local anyVisible = false
-
-		for _, child in next, container:GetChildren() do
-			if child:IsA("Frame") and child.Name ~= "" then
-				-- Check if this is a section root (has TextLabel child with section title)
-				local sectionMatch = false
-				for _, sub in next, child:GetChildren() do
-					if sub:IsA("TextLabel") and sub.Text and sub.Text ~= "" then
-						if matches(sub.Text) then
-							sectionMatch = true
-						end
-					end
-				end
-
-				-- Check element frames within this section (TextButton element frames)
-				local hasVisibleElement = false
-				for _, sub in next, child:GetDescendants() do
-					if sub:IsA("TextButton") then
-						local elementMatch = false
-						for _, lbl in next, sub:GetDescendants() do
-							if lbl:IsA("TextLabel") and lbl.Text and lbl.Text ~= "" and matches(lbl.Text) then
-								elementMatch = true
-								break
-							end
-						end
-						if elementMatch then
-							hasVisibleElement = true
-						end
-					end
-				end
-
-				local visible = sectionMatch or hasVisibleElement
-				child.Visible = visible
-				if visible then
-					anyVisible = true
-				end
-			end
-		end
-
-		tab.Frame.Visible = matchingTabs[idx] or anyVisible
 	end
 end
 
