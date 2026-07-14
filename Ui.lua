@@ -1305,19 +1305,14 @@ Components.Element = (function()
 		})
 
 		Element.Border = New("UIStroke", {
-			Transparency = 0.5,
-			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-			Color = Color3.fromRGB(0, 0, 0),
-			ThemeTag = {
-				Color = "ElementBorder",
-			},
+			Enabled = false,
 		})
 
 		Element.Frame = New("TextButton", {
 			Visible = Options.Visible and Options.Visible or true,
 			Size = UDim2.new(1, 0, 0, 0),
-			BackgroundTransparency = 0.89,
-			BackgroundColor3 = Color3.fromRGB(130, 130, 130),
+			BackgroundTransparency = 1,
+			BackgroundColor3 = Color3.fromRGB(0, 0, 0),
 			Parent = Parent,
 			AutomaticSize = Enum.AutomaticSize.Y,
 			Text = "",
@@ -1365,27 +1360,7 @@ Components.Element = (function()
 		Element:SetDesc(Desc)
 
 		if Hover then
-			local Themes = Library.Themes
-			local Motor, SetTransparency = Creator.SpringMotor(
-				Creator.GetThemeProperty("ElementTransparency"),
-				Element.Frame,
-				"BackgroundTransparency",
-				false,
-				true
-			)
-
-			Creator.AddSignal(Element.Frame.MouseEnter, function()
-				SetTransparency(Creator.GetThemeProperty("ElementTransparency") - Creator.GetThemeProperty("HoverChange"))
-			end)
-			Creator.AddSignal(Element.Frame.MouseLeave, function()
-				SetTransparency(Creator.GetThemeProperty("ElementTransparency"))
-			end)
-			Creator.AddSignal(Element.Frame.MouseButton1Down, function()
-				SetTransparency(Creator.GetThemeProperty("ElementTransparency") + Creator.GetThemeProperty("HoverChange"))
-			end)
-			Creator.AddSignal(Element.Frame.MouseButton1Up, function()
-				SetTransparency(Creator.GetThemeProperty("ElementTransparency") - Creator.GetThemeProperty("HoverChange"))
-			end)
+			-- Hover disabled — element background is fully transparent
 		end
 
 		return Element
