@@ -10,9 +10,12 @@ local VirtualUser = game:GetService("VirtualUser")
 
 
 local function _getGuiParent()
+	local LocalPlayer = game:GetService("Players").LocalPlayer
+	local PlayerGui = LocalPlayer and LocalPlayer:FindFirstChild("PlayerGui")
+	if PlayerGui then 
+		return PlayerGui 
+	end
 	local ok, res = pcall(function() return gethui() end)
-	if ok and res then return res end
-	ok, res = pcall(function() return cloneref(game:GetService("CoreGui")) end)
 	if ok and res then return res end
 	return game:GetService("CoreGui")
 end
