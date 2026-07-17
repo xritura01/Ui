@@ -10,13 +10,18 @@ local VirtualUser = game:GetService("VirtualUser")
 
 
 local function _getGuiParent()
+	-- 1. Try to get PlayerGui first so we never trigger the Capability check
 	local LocalPlayer = game:GetService("Players").LocalPlayer
 	local PlayerGui = LocalPlayer and LocalPlayer:FindFirstChild("PlayerGui")
 	if PlayerGui then 
 		return PlayerGui 
 	end
+
+	-- 2. Fallback to gethui() if PlayerGui isn't loaded yet
 	local ok, res = pcall(function() return gethui() end)
 	if ok and res then return res end
+
+	-- 3. Last resort fallback
 	return game:GetService("CoreGui")
 end
 
@@ -851,17 +856,30 @@ function Creator.New(Name, Properties, Children)
     print("✓ Instance.new")
 
     -- Default properties
-    for Property, Value in next, Creator.DefaultProperties[Name] or {} do
-        print("Default:", Property)
-        Object[Property] = Value
-    end
+	for Property, Value in next, Creator.DefaultProperties[Name] or {} do
+		-- Safely attempt to assign the property
+		local success, err = pcall(function()
+			Object[Property] = Value
+		end)
+		
+		-- If it fails, log it but keep running so the UI doesn't crash
+		if not success then
+			print(string.format("[Ui Library Warning]: Skipped protected property '%s' on '%s' due to capability limits.", Property, Name))
+		end
+	end
     print("✓ Defaults")
 
     -- Properties
     for Property, Value in next, Properties or {} do
         if Property ~= "ThemeTag" then
             print("Property:", Property, typeof(Value))
-            Object[Property] = Value
+            local success, err = pcall(function()
+                Object[Property] = Value
+            end)
+
+            if not success then
+                print(string.format("[Ui Library Warning]: Failed to set property '%s' on '%s'.", Property, Name))
+            end
         end
     end
     print("✓ Properties")
