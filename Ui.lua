@@ -842,27 +842,38 @@ function Creator.GetThemeProperty(Property)
 end
 
 function Creator.New(Name, Properties, Children)
-	local Object = Instance.new(Name)
+    print("Creating:", Name)
 
-	-- Default properties
-	for Name, Value in next, Creator.DefaultProperties[Name] or {} do
-		Object[Name] = Value
-	end
+    local Object = Instance.new(Name)
+    print("✓ Instance.new")
 
-	-- Properties
-	for Name, Value in next, Properties or {} do
-		if Name ~= "ThemeTag" then
-			Object[Name] = Value
-		end
-	end
+    -- Default properties
+    for Property, Value in next, Creator.DefaultProperties[Name] or {} do
+        print("Default:", Property)
+        Object[Property] = Value
+    end
+    print("✓ Defaults")
 
-	-- Children
-	for _, Child in next, Children or {} do
-		Child.Parent = Object
-	end
+    -- Properties
+    for Property, Value in next, Properties or {} do
+        if Property ~= "ThemeTag" then
+            print("Property:", Property, typeof(Value))
+            Object[Property] = Value
+        end
+    end
+    print("✓ Properties")
 
-	ApplyCustomProps(Object, Properties)
-	return Object
+    -- Children
+    for _, Child in next, Children or {} do
+        print("Child:", Child.ClassName)
+        Child.Parent = Object
+    end
+    print("✓ Children")
+
+    ApplyCustomProps(Object, Properties)
+    print("✓ Done")
+
+    return Object
 end
 
 function Creator.SpringMotor(Initial, Instance, Prop, IgnoreDialogCheck, ResetOnThemeChange)
